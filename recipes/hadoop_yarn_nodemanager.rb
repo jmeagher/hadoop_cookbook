@@ -46,6 +46,7 @@ end
 end
 
 service 'hadoop-yarn-nodemanager' do
+  pattern 'org.apache.hadoop.yarn.server.nodemanager.NodeManager'
   supports [:restart => true, :reload => false, :status => true]
   action :nothing
 end

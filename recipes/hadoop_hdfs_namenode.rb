@@ -74,6 +74,7 @@ execute 'hdfs-namenode-format' do
 end
 
 service 'hadoop-hdfs-namenode' do
+  pattern 'org.apache.hadoop.hdfs.server.namenode.NameNode'
   supports [:restart => true, :reload => false, :status => true]
   action :nothing
 end

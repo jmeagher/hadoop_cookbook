@@ -40,6 +40,7 @@ execute 'hdfs-tmpdir' do
 end
 
 service 'hadoop-yarn-resourcemanager' do
+  pattern 'org.apache.hadoop.yarn.server.resourcemanager.ResourceManager'
   supports [:restart => true, :reload => false, :status => true]
   action :nothing
 end
