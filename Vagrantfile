@@ -19,14 +19,16 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   # http://docs.vagrantup.com/v2/multi-machine/index.html
 
   %w(
-    centos-6.5
-    ubuntu-12.04
+    centos-6.4
   ).each do |platform|
 
     config.vm.define platform do |c|
       c.vm.box       = "opscode-#{platform}"
       c.vm.box_url   = "http://opscode-vm-bento.s3.amazonaws.com/vagrant/virtualbox/opscode_#{platform}_chef-provisionerless.box"
-      c.vm.host_name = "hadoop-#{platform}"
+      c.vm.host_name = "singlenode"
+      
+      # This allows access from the local machine
+      c.vm.network :private_network, ip: "192.168.99.2"
     end
   end
 
@@ -47,14 +49,19 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
       },
       :java => {
         :install_flavor => 'oracle',
-        :jdk_version => "6",
+        :jdk_version => "7",
         :oracle => {
           :accept_oracle_download_terms => true
         }
       },
       :hadoop => {
+        :distribution => 'cdh',
+        :distribution_version => '5',
         :container_executor => {
           'banned.users' => 'hdfs,yarn,mapred,bin'
+        },
+        :core_site => {
+          'fs.defaultFS' => 'hdfs://localhost:9000'
         },
         :hdfs_site => {
           'dfs.datanode.max.transfer.threads' => 4096
@@ -81,6 +88,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     }
 
     chef.run_list = [
+      # Install all the software
       "recipe[minitest-handler::default]",
       "recipe[java::default]",
       "recipe[hadoop::default]",
@@ -90,11 +98,16 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
       "recipe[hadoop::hadoop_yarn_resourcemanager]",
       "recipe[hadoop::hadoop_yarn_nodemanager]",
       "recipe[hadoop::zookeeper_server]",
-      "recipe[hadoop::hbase_master]",
-      "recipe[hadoop::hbase_regionserver]",
+      #"recipe[hadoop::hbase_master]",
+      #"recipe[hadoop::hbase_regionserver]",
       "recipe[hadoop::hive_server2]",
       "recipe[hadoop::hive_metastore]",
-      "recipe[hadoop::oozie]"
+      #"recipe[hadoop::oozie]",
+      "recipe[hadoop::pig]",
+
+      # Run things
+      "recipe[hadoop::hadoop_hdfs_namenode_init]",
+      "recipe[hadoop::testing_start_all]"
     ]
   end
 end
