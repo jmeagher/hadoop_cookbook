@@ -42,6 +42,11 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
   config.vm.provision :chef_solo do |chef|
     chef.json = {
+      :host => {
+        # TODO: There has to be a better way to do this
+        :name => "singlenode",
+        :ip => "192.168.99.2"
+      },
       :mysql => {
         :server_root_password => 'rootpass',
         :server_debian_password => 'debpass',
@@ -77,7 +82,8 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
       :hive => {
         :hive_site => {
           'hive.support.concurrency' => 'true',
-          'hive.zookeeper.quorum' => 'localhost'
+          'hive.zookeeper.quorum' => 'localhost',
+          'hive.metastore.uris' => 'thrift://localhost:9083'
         }
       },
       :zookeeper => {
@@ -88,6 +94,9 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     }
 
     chef.run_list = [
+      # Fix some basic OS level things
+      "recipe[hadoop::fix_hosts]",
+
       # Install all the software
       "recipe[minitest-handler::default]",
       "recipe[java::default]",
@@ -101,7 +110,9 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
       #"recipe[hadoop::hbase_master]",
       #"recipe[hadoop::hbase_regionserver]",
       "recipe[hadoop::hive_server2]",
-      "recipe[hadoop::hive_metastore]",
+      #"recipe[hadoop::hive_metastore]",
+      #"recipe[hadoop::hcatalog]",
+      "recipe[hadoop::hive_hcatalog_server]",
       #"recipe[hadoop::oozie]",
       "recipe[hadoop::pig]",
 
